@@ -109,18 +109,37 @@ router.put("/offer/update", isAuthenticated, async (req, res) => {
       }
 
       // update product_details
-      if (req.fields.product_details.length > 0) {
-        req.fields.product_details.forEach((detail) => {
-          const key = Object.keys(detail)[0];
-          const array = offer.product_details.filter((element) => {
-            return Object.keys(element)[0] === key;
-          });
-          if (array.length == 1) {
-            array[0][key] = detail[key];
+      const details = offer.product_details;
+      for (i = 0; i < details.length; i++) {
+        if (details[i].MARQUE) {
+          if (req.fields.brand) {
+            details[i].MARQUE = req.fields.brand;
           }
-        });
-        return offer;
+        }
+        if (details[i].TAILLE) {
+          if (req.fields.size) {
+            details[i].TAILLE = req.fields.size;
+          }
+        }
+        if (details[i].ÉTAT) {
+          if (req.fields.condition) {
+            details[i].ÉTAT = req.fields.condition;
+          }
+        }
+        if (details[i].COULEUR) {
+          if (req.fields.color) {
+            details[i].COULEUR = req.fields.color;
+          }
+        }
+        if (details[i].EMPLACEMENT) {
+          if (req.fields.location) {
+            details[i].EMPLACEMENT = req.fields.location;
+          }
+        }
       }
+
+      // Notifie Mongoose que l'on a modifié le tableau product_details
+      offer.markModified("product_details");
     }
 
     await offer.save();
