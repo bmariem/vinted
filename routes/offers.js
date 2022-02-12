@@ -77,32 +77,49 @@ router.post("/offer/publish", isAuthenticated, async (req, res) => {
       res.status(400).json({ message: "Maximum de Prix est 100000 euros" });
     }
 
-    // creation d'une nouvelle Offre
-    const newOffer = await new Offer({
-      product_name: req.fields.product_name,
-      product_description: req.fields.product_description,
-      product_price: req.fields.product_price,
-      product_details: [
-        { ETAT: req.fields.condition },
-        { TAILLE: req.fields.size },
-        { EMPLACEMENT: req.fields.city },
-        { COULEUR: req.fields.color },
-        { MARQUE: req.fields.brand },
-      ],
-      owner: req.user,
-    });
+    if (
+      req.fields.product_name &&
+      req.fields.product_price &&
+      req.files.product_image.path
+    ) {
+      // creation d'une nouvelle Offre
+      const newOffer = await new Offer({
+        product_name: req.fields.product_name,
+        product_description: req.fields.product_description,
+        product_price: req.fields.product_price,
+        product_details: [
+          { ETAT: req.fields.condition },
+          { TAILLE: req.fields.size },
+          { EMPLACEMENT: req.fields.city },
+          { COULEUR: req.fields.color },
+          { MARQUE: req.fields.brand },
+        ],
+        owner: req.user,
+      });
 
-    // Upload image from cloudinary
-    const imageToUpload = req.files.product_image.path;
+      // Upload image from cloudinary
+      const imageToUpload = req.files.product_image.path;
 
-    const imageCloud = await cloudinary.uploader.upload(imageToUpload, {
-      public_id: `vinted/offers/${newOffer._id}`,
-    });
+      const imageCloud = await cloudinary.uploader.upload(
+        imageToUpload,
+        "vinted_upload",
+        {
+          folder: `vinted/offers/${newOffer._id}`,
+          public_id: "preview",
+        }
+      );
 
-    newOffer["product_image"] = imageCloud;
-    newOffer.save();
-    res.status(200).json(newOffer);
+      newOffer["product_image"] = imageCloud;
+      await newOffer.save();
+
+      res.status(200).json(newOffer);
+    } else {
+      res
+        .status(400)
+        .json({ message: "title, price and picture are required" });
+    }
   } catch (error) {
+    console.log(error.message);
     res.status(400).json(error.message);
   }
 });
