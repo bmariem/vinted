@@ -125,10 +125,10 @@ router.post("/offer/publish", isAuthenticated, async (req, res) => {
 });
 
 // update an offer
-router.put("/offer/update", isAuthenticated, async (req, res) => {
+router.put("/offer/update/:id", isAuthenticated, async (req, res) => {
   try {
     // verifier l'existance de l'offre
-    const offer = await Offer.findById(req.query.id);
+    const offer = await Offer.findById(req.params.id);
 
     if (offer === null) {
       res.status(400).json({ message: " Offer not found" });
@@ -167,8 +167,10 @@ router.put("/offer/update", isAuthenticated, async (req, res) => {
       if (req.files.product_image.path) {
         const imageCloud = await cloudinary.uploader.upload(
           req.files.product_image.path,
+          "vinted_upload",
           {
-            public_id: `vinted/offers/${offer._id}`,
+            folder: `vinted/offers/${newOffer._id}`,
+            public_id: "preview",
           }
         );
         offer["product_image"] = imageCloud;
@@ -211,19 +213,28 @@ router.put("/offer/update", isAuthenticated, async (req, res) => {
     await offer.save();
     res.status(200).json(offer);
   } catch (error) {
-    res.status(400).json(error.message);
+    console.log(error.message);
+    res.status(400).json({ error: error.message });
   }
 });
 
 // delete an offer
-router.delete("/offer/delete", isAuthenticated, async (req, res) => {
+router.delete("/offer/delete/:id", isAuthenticated, async (req, res) => {
   try {
-    const offer = await Offer.findOneAndDelete({ id: req.query.id });
+    const offer = await Offer.findOneAndDelete({ id: req.params.id });
     if (offer === null) {
+      // delete all images in cloudinary folder
+      await cloudinary.api.delete_resources_by_prefix(
+        `vinted/offers/${req.params.id}`
+      );
+      // empty folder => delete it
+      await cloudinary.api.delete_folder(`vinted/offers/${req.params.id}`);
+
       res.status(200).json({ message: "Offer successfully deleted !" });
     }
   } catch (error) {
-    res.status(400).json(error.message);
+    console.log(error.message);
+    res.status(400).json({ error: error.message });
   }
 });
 
