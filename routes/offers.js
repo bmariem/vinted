@@ -25,6 +25,11 @@ router.get("/offers", async (req, res) => {
       product_price: { $gte: filters.priceMin, $lte: filters.priceMax },
       product_name: new RegExp(filters.title, "i"),
     }) // selectionner dans le BDD tous les documents dont le prix seront entre min et max renseigné et dont le nom est le titre rensigne
+
+      .populate({
+        path: "owner",
+        select: "account",
+      }) // relier une offre a son proprio
       .sort({ product_price: filters.sort.replace("price-", "") }) // trier le resulat par ordre de prix croissant ou decroissant
       .limit(filters.limit) // limiter le resulat a 3 document par page
       .skip(filters.limit * filters.page) // skip a chaque page le nombre de document deja affiché dans la/les page precedents
