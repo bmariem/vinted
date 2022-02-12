@@ -25,7 +25,7 @@ router.post("/user/signup", async (req, res) => {
     });
 
     if (user !== null) {
-      res.status(400).json({
+      res.status(409).json({
         message: "the email entered during registration already exists",
       });
     } else {
@@ -56,6 +56,7 @@ router.post("/user/signup", async (req, res) => {
 
         cloudAvatar = await cloudinary.uploader.upload(req.files.avatar.path, {
           folder: `vinted/avatarUsers/${newUser._id}`,
+          public_id: "avatar",
         });
 
         newUser.account.avatar = cloudAvatar;
@@ -64,7 +65,8 @@ router.post("/user/signup", async (req, res) => {
       }
     }
   } catch (error) {
-    res.status(400).json(error.message);
+    console.log(error.message);
+    res.status(400).json({ message: error.message });
   }
 });
 
@@ -100,13 +102,14 @@ router.post("/user/login", async (req, res) => {
         });
       } else {
         //Unauthorized
-        res.status(400).json({
+        res.status(401).json({
           message: "Unauthorized : the password entered is incorrect",
         });
       }
     }
   } catch (error) {
-    res.status(400).json(error.message);
+    console.log(error.message);
+    res.json({ message: error.message });
   }
 });
 
