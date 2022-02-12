@@ -165,62 +165,26 @@ router.delete("/offer/delete", isAuthenticated, async (req, res) => {
 // If no filter is sent, this route will return all announcements
 router.get("/offers", async (req, res) => {
   try {
-    // creation of an object in which we will store our different filters
-    let filters = {};
+    const filters = {
+      limit: 3,
+      title: req.query.title ? req.query.title : "",
+      priceMin: req.query.priceMin ? Number(req.query.priceMin) : 0,
+      priceMax: req.query.priceMax ? Number(req.query.priceMax) : 100000,
+      sort: req.query.sort ? req.query.sort : "",
+      page: req.query.page ? Number(req.query.page) : 0,
+    };
 
-    if (req.query.title) {
-      filters.product_name = new RegExp(req.query.title, "i");
-    }
+    const offers = await Offer.find({
+      product_price: { $gte: filters.priceMin, $lte: filters.priceMax },
+      product_name: new RegExp(filters.title, "i"),
+    }) // selectionner dans le BDD tous les documents dont le prix seront entre min et max renseigné et dont le nom est le titre rensigne
+      .sort({ product_price: filters.sort.replace("price-", "") }) // trier le resulat par ordre de prix croissant ou decroissant
+      .limit(filters.limit) // limiter le resulat a 3 document par page
+      .skip(filters.limit * filters.page) // skip a chaque page le nombre de document deja affiché dans la/les page precedents
+      .select("product_name product_price"); // afficher le resulat par le nom et le prix
 
-    if (req.query.priceMin) {
-      filters.product_price = {
-        $gte: req.query.priceMin,
-      };
-    }
-
-    if (req.query.priceMax) {
-      if (filters.product_price) {
-        filters.product_price.$lte = req.query.priceMax;
-      } else {
-        filters.product_price = {
-          $lte: req.query.priceMax,
-        };
-      }
-    }
-
-    let sort = {};
-
-    if (req.query.sort === "price-desc") {
-      sort = { product_price: -1 };
-    } else if (req.query.sort === "price-asc") {
-      sort = { product_price: 1 };
-    }
-
-    let page;
-    if (Number(req.query.page) < 1) {
-      page = 1;
-    } else {
-      page = Number(req.query.page);
-    }
-
-    let limit = Number(req.query.limit);
-
-    const offers = await Offer.find(filters)
-      .populate({
-        path: "owner",
-        select: "account",
-      })
-      .sort(sort)
-      .skip((page - 1) * limit) // ignore x results
-      .limit(limit); // return y results
-
-    // return the number of ads found according to the filters
-    const count = await Offer.countDocuments(filters);
-
-    res.json({
-      count: count,
-      offers: offers,
-    });
+    const allExistingOffers = await Offer.countDocuments(filters);
+    res.status(200).json({ count: allExistingOffers, offers: offers });
   } catch (error) {
     console.log(error.message);
     res.status(400).json({ message: error.message });
