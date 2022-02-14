@@ -67,52 +67,29 @@ router.post("/offer/publish", isAuthenticated, async (req, res) => {
   // creer une nouvelle offre
 
   try {
-    //product_name : max 50 caractères
-    if (req.fields.product_name.length >= 50) {
-      res.status(400).json({ message: "50 caractères max pour le titre" });
-    }
-    //product_description : 500 caractères
-    if (req.fields.product_description.length >= 500) {
-      res
-        .status(400)
-        .json({ message: "500 caractères max pour la description" });
-    }
-    // product_price : 100000
-    if (req.fields.product_price.length >= 100000) {
-      res.status(400).json({ message: "Maximum de Prix est 100000 euros" });
-    }
-
-    if (
-      req.fields.product_name &&
-      req.fields.product_price &&
-      req.files.product_image.path
-    ) {
+    const { title, description, price, brand, size, condition, color, city } =
+      req.fields;
+    if (title && price && req.files.picture.path) {
       // creation d'une nouvelle Offre
       const newOffer = await new Offer({
-        product_name: req.fields.product_name,
-        product_description: req.fields.product_description,
-        product_price: req.fields.product_price,
+        product_name: title,
+        product_description: description,
+        product_price: price,
         product_details: [
-          { ETAT: req.fields.condition },
-          { TAILLE: req.fields.size },
-          { EMPLACEMENT: req.fields.city },
-          { COULEUR: req.fields.color },
-          { MARQUE: req.fields.brand },
+          { MARQUE: brand },
+          { TAILLE: size },
+          { ÉTAT: condition },
+          { COULEUR: color },
+          { EMPLACEMENT: city },
         ],
         owner: req.user,
       });
 
       // Upload image from cloudinary
-      const imageToUpload = req.files.product_image.path;
-
-      const imageCloud = await cloudinary.uploader.upload(
-        imageToUpload,
-        "vinted_upload",
-        {
-          folder: `vinted/offers/${newOffer._id}`,
-          public_id: "preview",
-        }
-      );
+      const imageToUpload = req.files.picture.path;
+      const imageCloud = await cloudinary.uploader.upload(imageToUpload, {
+        folder: `vinted/offers/${newOffer._id}`,
+      });
 
       newOffer["product_image"] = imageCloud;
       await newOffer.save();
@@ -169,9 +146,9 @@ router.put("/offer/update/:id", isAuthenticated, async (req, res) => {
       }
 
       // update image
-      if (req.files.product_image.path) {
+      if (req.files.picture.path) {
         const imageCloud = await cloudinary.uploader.upload(
-          req.files.product_image.path,
+          req.files.picture.path,
           "vinted_upload",
           {
             folder: `vinted/offers/${newOffer._id}`,
