@@ -13,13 +13,14 @@ cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.API_KEY,
   api_secret: process.env.API_SECRET,
+  secure: true,
 });
 
 // Création du seveur
 const app = express();
 app.use(formidable());
 
-// Permet d'autoriser tous les sites à appeler mon API
+// Autoriser les requetes entre mon API et autres sites externes
 app.use(cors());
 
 // Création de la BDD
