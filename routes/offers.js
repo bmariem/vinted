@@ -24,16 +24,16 @@ router.get("/offers", async (req, res) => {
     const offers = await Offer.find({
       product_price: { $gte: filters.priceMin, $lte: filters.priceMax },
       product_name: new RegExp(filters.title, "i"),
-    }) // selectionner dans le BDD tous les documents dont le prix seront entre min et max renseigné et dont le nom est le titre rensigne
+    }) // select in the DB all the documents whose price will be between min and max entered and whose name is the title entered
 
       .populate({
         path: "owner",
         select: "account",
-      }) // relier une offre a son proprio
-      .sort({ product_price: filters.sort.replace("price-", "") }) // trier le resulat par ordre de prix croissant ou decroissant
-      .limit(filters.limit) // limiter le resulat a 3 document par page
-      .skip(filters.limit * filters.page) // skip a chaque page le nombre de document deja affiché dans la/les page precedents
-      .select("product_name product_price"); // afficher le resulat par le nom et le prix
+      }) // link an offer to its owner
+      .sort({ product_price: filters.sort.replace("price-", "") }) // sort the result in asc or desc price order
+      .limit(filters.limit) // limit the result to 3 documents per page
+      .skip(filters.limit * filters.page) // skip on each page the number of documents already displayed in the previous page(s)
+      .select("product_name product_price"); // show result by name and price
 
     const allExistingOffers = await Offer.countDocuments(filters);
     res.status(200).json({ count: allExistingOffers, offers: offers });
@@ -64,13 +64,11 @@ router.get("/offer/:id", async (req, res) => {
 
 // publish an offer
 router.post("/offer/publish", isAuthenticated, async (req, res) => {
-  // creer une nouvelle offre
-
   try {
     const { title, description, price, brand, size, condition, color, city } =
       req.fields;
     if (title && price && req.files.picture.path) {
-      // creation d'une nouvelle Offre
+      // create a new offer
       const newOffer = await new Offer({
         product_name: title,
         product_description: description,
@@ -109,14 +107,14 @@ router.post("/offer/publish", isAuthenticated, async (req, res) => {
 // update an offer
 router.put("/offer/update/:id", isAuthenticated, async (req, res) => {
   try {
-    // verifier l'existance de l'offre
+    // verify if offer exists
     const offer = await Offer.findById(req.params.id);
 
     if (offer === null) {
       res.status(400).json({ message: " Offer not found" });
     } else {
       // Offer exists :
-      //Update product_name : max 50 caractères
+      // Update product_name : max 50 caractères
       if (req.fields.product_name) {
         if (req.fields.product_name.length >= 50) {
           res.status(400).json({ message: "50 caractères max pour le titre" });
@@ -125,7 +123,7 @@ router.put("/offer/update/:id", isAuthenticated, async (req, res) => {
         }
       }
 
-      //Update product_description : 500 caractères
+      // Update product_description : 500 caractères
       if (req.fields.product_description) {
         if (req.fields.product_description.length >= 500) {
           res

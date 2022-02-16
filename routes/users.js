@@ -7,14 +7,14 @@ const encBase64 = require("crypto-js/enc-base64");
 
 const cloudinary = require("cloudinary").v2;
 
-// configuation de Cloudinary
+// cloudinary setup
 cloudinary.config({
   cloud_name: "ddlxp2yuy",
   api_key: "374294462748147",
   api_secret: "OfRmgvA7kdhq22ZqjNA2tG1NioM",
 });
 
-//import des modèles
+//import models
 const User = require("../models/User");
 
 // Sign Up
@@ -36,11 +36,11 @@ router.post("/user/signup", async (req, res) => {
       } else {
         const password = req.fields.password;
 
-        const salt = uid2(16); // Générer un Salt
+        const salt = uid2(16); // generate a Salt
 
-        const hash = SHA256(password + salt).toString(encBase64); //générer un HASH
+        const hash = SHA256(password + salt).toString(encBase64); // generate an HASH
 
-        const token = uid2(16); //générer un token
+        const token = uid2(16); // generate a token
 
         const newUser = new User({
           email: req.fields.email,
@@ -90,14 +90,12 @@ router.post("/user/login", async (req, res) => {
       });
     } else {
       // email exist <=> user exists in BDD
-
       const newHash = SHA256(req.fields.password + user.salt).toString(
         encBase64
       );
       // check password
       if (user.hash === newHash) {
         // Authorized access <=> we can connect
-
         res.status(200).json({
           id: user.id,
           token: user.token,

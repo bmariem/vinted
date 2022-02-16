@@ -1,4 +1,4 @@
-// activer les var d'ENV <=> avoir acces à process.env
+// Enable ENV vars <=> have access to process.env
 require("dotenv").config();
 
 const express = require("express");
@@ -7,7 +7,7 @@ const formidable = require("express-formidable");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
-// configuation de Cloudinary
+// Setup Cloudinary
 const cloudinary = require("cloudinary").v2;
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -16,21 +16,21 @@ cloudinary.config({
   secure: true,
 });
 
-// Création du seveur
+// create a server
 const app = express();
 app.use(formidable());
 
-// Autoriser les requetes entre mon API et autres sites externes
+// Allow requests between my AMI and other external sites
 app.use(cors());
 
-// Création de la BDD
+// create a DB
 mongoose.connect(process.env.MONGODB_URI);
 
 app.get("/", async (req, res) => {
   res.status(200).json("Welcome on Vinted API !");
 });
 
-//import des routes
+//import routes
 const usersRoutes = require("./routes/users");
 app.use(usersRoutes);
 
