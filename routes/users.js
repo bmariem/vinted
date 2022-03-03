@@ -7,13 +7,6 @@ const encBase64 = require("crypto-js/enc-base64");
 
 const cloudinary = require("cloudinary").v2;
 
-// cloudinary setup
-cloudinary.config({
-  cloud_name: "ddlxp2yuy",
-  api_key: "374294462748147",
-  api_secret: "OfRmgvA7kdhq22ZqjNA2tG1NioM",
-});
-
 //import models
 const User = require("../models/User");
 
